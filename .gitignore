@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment Files
+.env
+.env.*
+**/.env
+**/.env.*
+test-env.js
+
+# Build Artifacts
+.next/
+**/.next/
+dist/
+**/dist/
+artifacts/
+**/artifacts/
+cache/
+**/cache/
+types/
+**/types/
+coverage/
+**/coverage/
+build/
+**/build/
+out/
+**/out/
+*.tsbuildinfo
+next-env.d.ts
+
+# IDEs and OS
+.DS_Store
+.vscode/
+.idea/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Misc
+.vercel
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
