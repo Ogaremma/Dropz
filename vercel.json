@@ -1,6 +1,0 @@
-{
-    "installCommand": "npm install --prefix dropz-frontend",
-    "buildCommand": "npm run build --prefix dropz-frontend",
-    "outputDirectory": "dropz-frontend/.next",
-    "framework": "nextjs"
-}
