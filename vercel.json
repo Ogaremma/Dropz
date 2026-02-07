@@ -1,0 +1,5 @@
+{
+    "buildCommand": "cd dropz-frontend && npm install && npm run build",
+    "outputDirectory": "dropz-frontend/.next",
+    "framework": "nextjs"
+}
