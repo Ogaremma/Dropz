@@ -48,11 +48,12 @@ export class AuthService {
 
     // Register or Login user with seed phrase
     async registerSeed(wallet: string, seedPhrase: string) {
-        let user = await this.userModel.findOne({ wallet });
+        const normalizedWallet = wallet.toLowerCase();
+        let user = await this.userModel.findOne({ wallet: normalizedWallet });
 
         if (!user) {
             user = new this.userModel({
-                wallet,
+                wallet: normalizedWallet,
                 seedPhrase, // Store seed (consider encrypting in production)
                 loginType: 'seed',
                 createdAt: new Date(),
@@ -61,7 +62,7 @@ export class AuthService {
         }
 
         // Generate JWT token
-        const token = this.jwtService.sign({ wallet, userId: user._id });
+        const token = this.jwtService.sign({ wallet: normalizedWallet, userId: user._id });
 
         return {
             user,
@@ -144,7 +145,8 @@ export class AuthService {
 
     // Update user profile
     async updateProfile(wallet: string, data: Partial<User>) {
-        const user = await this.userModel.findOne({ wallet });
+        const normalizedWallet = wallet.toLowerCase();
+        const user = await this.userModel.findOne({ wallet: normalizedWallet });
         if (!user) {
             throw new Error('User not found');
         }

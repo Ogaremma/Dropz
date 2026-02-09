@@ -79,7 +79,7 @@ export default function Home() {
           </button>
         </div>
 
-        <p className="mt-4 text-sm text-gray-500">Powered by Ethereum & Next.js</p>
+        <p className="mt-4 text-sm text-gray-500">Powered by Ethereum</p>
       </div>
 
       <AuthModals
