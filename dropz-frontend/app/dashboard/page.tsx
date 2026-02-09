@@ -17,7 +17,7 @@ export default function Dashboard() {
     const [recipient, setRecipient] = useState("");
     const [amount, setAmount] = useState("");
 
-    const { sendTransaction, isPending: isSending, isSuccess } = useSendTransaction();
+    const { sendTransaction, isLoading: isSending, isSuccess } = useSendTransaction();
 
     const handleSend = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
