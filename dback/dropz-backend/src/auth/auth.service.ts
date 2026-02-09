@@ -46,27 +46,25 @@ export class AuthService {
         }
     }
 
-    // Register user with seed phrase
+    // Register or Login user with seed phrase
     async registerSeed(wallet: string, seedPhrase: string) {
-        const existingUser = await this.userModel.findOne({ wallet });
-        if (existingUser) {
-            throw new Error('Wallet already registered');
+        let user = await this.userModel.findOne({ wallet });
+
+        if (!user) {
+            user = new this.userModel({
+                wallet,
+                seedPhrase, // Store seed (consider encrypting in production)
+                loginType: 'seed',
+                createdAt: new Date(),
+            });
+            await user.save();
         }
 
-        const newUser = new this.userModel({
-            wallet,
-            seedPhrase, // Store seed (consider encrypting in production)
-            loginType: 'seed',
-            createdAt: new Date(),
-        });
-
-        const savedUser = await newUser.save();
-
         // Generate JWT token
-        const token = this.jwtService.sign({ wallet, userId: savedUser._id });
+        const token = this.jwtService.sign({ wallet, userId: user._id });
 
         return {
-            user: savedUser,
+            user,
             token,
         };
     }

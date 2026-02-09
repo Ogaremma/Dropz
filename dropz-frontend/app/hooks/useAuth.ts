@@ -112,7 +112,7 @@ export function useAuth() {
         }
     };
 
-    const importSeedphraseWallet = async (seed: string) => {
+    const loginWithSeedphrase = async (seed: string) => {
         setLoading(true);
         setError(null);
         try {
@@ -123,13 +123,14 @@ export function useAuth() {
                 body: JSON.stringify({ wallet: wallet.address, seedPhrase: seed }),
             });
             const data = await res.json();
-            // If already registered, we should probably login or just store it
+            if (!res.ok) throw new Error(data.message || "Login failed");
 
             localStorage.setItem("dropz_auth_token", data.token);
             localStorage.setItem("dropz_custom_wallet", JSON.stringify({ address: wallet.address, seed }));
+            setCustomAuth(true);
             return data;
         } catch (err: any) {
-            setError("Invalid seed phrase or import failed");
+            setError(err.message || "Invalid seed phrase");
             throw err;
         } finally {
             setLoading(false);
@@ -151,7 +152,7 @@ export function useAuth() {
         loginWithEmail,
         generateSeedphrase,
         registerSeedphraseWallet,
-        importSeedphraseWallet,
+        loginWithSeedphrase,
         logout,
         user: privyUser || (customAuth ? { custom: true } : null),
     };

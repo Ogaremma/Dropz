@@ -10,37 +10,48 @@ interface AuthModalProps {
     type: "seed" | "email";
 }
 
-export default function AuthModals({ isOpen, onClose, type }: AuthModalProps) {
+export default function AuthModals({ isOpen, onClose, type: initialType }: AuthModalProps) {
     const router = useRouter();
     const {
-        registerWithEmail,
-        loginWithEmail,
+        loginWithPrivy,
+        loginWithSeedphrase,
         generateSeedphrase,
         registerSeedphraseWallet,
         loading
     } = useAuth();
 
+    const [modalType, setModalType] = useState<"choice" | "seed" | "import" | "email">(initialType === "seed" ? "choice" : "email");
     const [step, setStep] = useState(1);
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [isLogin, setIsLogin] = useState(true);
     const [seedData, setSeedData] = useState<{ address: string; seedPhrase?: string } | null>(null);
+    const [importSeed, setImportSeed] = useState("");
     const [error, setError] = useState<string | null>(null);
+
+    // Sync modalType if initialType changes (though handled by mount usually)
+    React.useEffect(() => {
+        if (initialType === "seed") setModalType("choice");
+        else setModalType("email");
+    }, [initialType]);
 
     if (!isOpen) return null;
 
-    const handleEmailAuth = async (e: React.FormEvent) => {
+    const handleGmailLogin = async () => {
+        try {
+            await loginWithPrivy();
+            // Privy handles redirection usually via its own state, 
+            // but useAuth/router will pick it up.
+        } catch (err: any) {
+            setError("Gmail login failed");
+        }
+    };
+
+    const handleImportSeed = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
         try {
-            if (isLogin) {
-                await loginWithEmail(email, password);
-            } else {
-                await registerWithEmail(email, password);
-            }
+            await loginWithSeedphrase(importSeed);
             router.push("/dashboard");
         } catch (err: any) {
-            setError(err.message);
+            setError(err.message || "Invalid seed phrase");
         }
     };
 
@@ -50,6 +61,7 @@ export default function AuthModals({ isOpen, onClose, type }: AuthModalProps) {
             const data = await generateSeedphrase();
             setSeedData(data);
             setStep(2);
+            setModalType("seed");
         } catch (err: any) {
             setError("Failed to generate wallet");
         }
@@ -67,126 +79,142 @@ export default function AuthModals({ isOpen, onClose, type }: AuthModalProps) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-            <div className="bg-white text-gray-900 rounded-3xl p-8 max-w-lg w-full shadow-2xl relative overflow-hidden">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-2xl flex items-center justify-center z-50 p-4 animate-in fade-in duration-500">
+            <div className="bg-[#0a0a0b] border border-white/10 text-white rounded-[3rem] p-10 max-w-lg w-full shadow-[0_0_100px_rgba(79,70,229,0.15)] relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500"></div>
+
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+                    className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors"
                 >
-                    ✕
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
 
-                {type === "email" ? (
-                    <div className="space-y-6">
-                        <div className="text-center">
-                            <h2 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-                                {isLogin ? "Welcome Back" : "Join Dropz"}
-                            </h2>
-                            <p className="text-gray-500 mt-2">
-                                {isLogin ? "Login with your email and password" : "Create a new account with email"}
-                            </p>
+                {modalType === "choice" && (
+                    <div className="space-y-8 py-4">
+                        <div className="text-center space-y-3">
+                            <h2 className="text-4xl font-black tracking-tighter">Enter the <span className="text-indigo-500">Void</span></h2>
+                            <p className="text-gray-400 font-medium">Select your authentication protocol to proceed.</p>
                         </div>
 
-                        <form onSubmit={handleEmailAuth} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="name@example.com"
-                                    className="w-full p-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="••••••••"
-                                    className="w-full p-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                                    required
-                                />
-                            </div>
+                        <div className="space-y-4">
+                            <button
+                                onClick={handleGmailLogin}
+                                className="w-full flex items-center gap-4 bg-white text-black p-5 rounded-2xl font-black text-lg hover:scale-[1.02] transition-all shadow-xl active:scale-95"
+                            >
+                                <div className="bg-red-500/10 p-2 rounded-lg">
+                                    <svg className="w-6 h-6 text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.908 3.152-1.928 4.176-1.144 1.144-2.924 2.456-6.248 2.456-5.344 0-9.44-4.34-10.412-9.676-.084-.464-.128-.948-.128-1.44s.044-.976.128-1.44c.972-5.336 5.068-9.676 10.412-9.676 3.1 0 5.392 1.196 7.1 2.8l2.264-2.264C18.428 1.132 15.656 0 12.24 0 5.484 0 0 5.484 0 12.24s5.484 12.24 12.24 12.24c3.684 0 6.64-1.216 8.8-3.468 2.216-2.216 2.928-5.328 2.928-7.792 0-.74-.064-1.452-.184-2.12h-11.304v-.18z" /></svg>
+                                </div>
+                                Login with Gmail
+                            </button>
 
-                            {error && <p className="text-red-500 text-sm bg-red-50 p-3 rounded-lg border border-red-100">{error}</p>}
+                            <button
+                                onClick={startSeedphraseFlow}
+                                className="w-full flex items-center gap-4 bg-indigo-600 text-white p-5 rounded-2xl font-black text-lg hover:bg-indigo-500 hover:scale-[1.02] transition-all shadow-xl shadow-indigo-600/20 active:scale-95 border border-indigo-400/30"
+                            >
+                                <div className="bg-white/10 p-2 rounded-lg">🚀</div>
+                                New Seedphrase Wallet
+                            </button>
+
+                            <button
+                                onClick={() => setModalType("import")}
+                                className="w-full flex items-center justify-center p-5 rounded-2xl font-black text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm uppercase tracking-widest"
+                            >
+                                Import Existing Wallet
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {modalType === "import" && (
+                    <div className="space-y-8 py-4">
+                        <div className="text-center space-y-3">
+                            <h2 className="text-3xl font-black tracking-tighter">Import <span className="text-purple-500">Vault</span></h2>
+                            <p className="text-gray-400 font-medium">Enter your 12-word recovery seed phrase.</p>
+                        </div>
+
+                        <form onSubmit={handleImportSeed} className="space-y-6">
+                            <textarea
+                                value={importSeed}
+                                onChange={(e) => setImportSeed(e.target.value)}
+                                placeholder="word1 word2 word3..."
+                                className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-6 font-mono text-sm focus:ring-2 focus:ring-purple-500 outline-none transition-all h-32 resize-none"
+                                required
+                            />
+
+                            {error && <p className="text-red-400 text-sm font-bold bg-red-400/10 p-4 rounded-xl border border-red-400/20">{error}</p>}
 
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50"
+                                className="w-full bg-white text-black py-5 rounded-2xl font-black text-xl hover:scale-[1.02] transition-all shadow-xl active:scale-95 disabled:opacity-50"
                             >
-                                {loading ? "Processing..." : isLogin ? "Login" : "Sign Up"}
+                                {loading ? "Syncing..." : "Access Wallet"}
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setModalType("choice")}
+                                className="w-full text-gray-500 font-black text-xs uppercase tracking-widest hover:text-white transition-colors"
+                            >
+                                Go Back
                             </button>
                         </form>
+                    </div>
+                )}
 
-                        <div className="text-center">
+                {modalType === "seed" && (
+                    <div className="space-y-8 py-4">
+                        <div className="text-center space-y-3">
+                            <h2 className="text-3xl font-black tracking-tighter">Secure <span className="text-indigo-400">Recovery</span></h2>
+                            <p className="text-gray-400 font-medium font-mono text-xs uppercase tracking-widest italic">Sector Verified</p>
+                        </div>
+
+                        <div className="bg-indigo-500/5 border border-indigo-500/20 p-6 rounded-3xl space-y-4">
+                            <div className="grid grid-cols-2 gap-3">
+                                {seedData?.seedPhrase?.split(" ").map((word, i) => (
+                                    <div key={i} className="bg-white/[0.02] border border-white/5 p-3 rounded-xl flex items-center gap-3">
+                                        <span className="text-indigo-500/40 text-[10px] font-black">{i + 1}</span>
+                                        <span className="font-bold text-gray-200 text-sm">{word}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="bg-amber-500/10 border border-amber-500/20 p-5 rounded-2xl">
+                            <p className="text-amber-500 text-xs font-bold leading-relaxed">
+                                <span className="font-black uppercase tracking-widest block mb-1">⚠️ Mortal Warning</span>
+                                If you lose this 12-word seed, your assets will be lost in the void forever. We cannot recover them.
+                            </p>
+                        </div>
+
+                        <div className="space-y-4">
                             <button
-                                onClick={() => setIsLogin(!isLogin)}
-                                className="text-sm text-indigo-600 font-medium hover:underline"
+                                onClick={() => {
+                                    navigator.clipboard.writeText(seedData?.seedPhrase || "");
+                                    alert("Seed phrase copied to secure clipboard!");
+                                }}
+                                className="w-full bg-white/5 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-white/10 transition-all border border-white/10"
                             >
-                                {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login"}
+                                Copy Phrase
+                            </button>
+                            <button
+                                onClick={confirmSeedphrase}
+                                disabled={loading}
+                                className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-xl hover:bg-indigo-500 shadow-xl shadow-indigo-600/20 transition-all"
+                            >
+                                {loading ? "Finalizing..." : "I Have Stored the Phrase"}
                             </button>
                         </div>
                     </div>
-                ) : (
-                    <div className="space-y-6">
-                        {step === 1 ? (
-                            <div className="text-center space-y-6">
-                                <div className="text-5xl">🔐</div>
-                                <h2 className="text-3xl font-extrabold text-gray-900">Seed Phrase Wallet</h2>
-                                <p className="text-gray-500">
-                                    We will generate a 12-word recovery phrase. This phrase allows you to access your wallet from anywhere.
-                                </p>
-                                <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl text-amber-800 text-sm text-left">
-                                    ⚠️ **IMPORTANT**: If you lose these 12 words, you lose access to your funds forever. We cannot recover them for you.
-                                </div>
-                                <button
-                                    onClick={startSeedphraseFlow}
-                                    disabled={loading}
-                                    className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition"
-                                >
-                                    {loading ? "Generating..." : "Generate Phrase Now"}
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="space-y-6">
-                                <h2 className="text-2xl font-bold text-center">Your Recovery Phrase</h2>
-                                <p className="text-sm text-gray-500 text-center">Write these 12 words down in order and store them safely.</p>
+                )}
 
-                                <div className="grid grid-cols-3 gap-3 p-6 bg-gray-50 rounded-2xl border border-gray-100 font-mono text-sm shadow-inner">
-                                    {seedData?.seedPhrase?.split(" ").map((word, i) => (
-                                        <div key={i} className="bg-white p-2 rounded-lg border border-gray-200 flex items-center gap-2">
-                                            <span className="text-gray-400 text-xs">{i + 1}</span>
-                                            <span className="font-bold text-indigo-900">{word}</span>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-
-                                <div className="space-y-3">
-                                    <button
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(seedData?.seedPhrase || "");
-                                            alert("Seed phrase copied to clipboard!");
-                                        }}
-                                        className="w-full py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition"
-                                    >
-                                        Copy to Clipboard
-                                    </button>
-                                    <button
-                                        onClick={confirmSeedphrase}
-                                        disabled={loading}
-                                        className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition"
-                                    >
-                                        {loading ? "Finalizing..." : "I have saved these words"}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
+                {/* Keep Email if needed, but could be simplified */}
+                {modalType === "email" && (
+                    <div className="space-y-8 py-4 text-center">
+                        <h2 className="text-3xl font-black tracking-tighter">Email <span className="text-indigo-500">Access</span></h2>
+                        <p className="text-gray-400">Standard email authentication is being integrated into the main Void protocol. Please use Gmail for instant access.</p>
+                        <button onClick={() => setModalType("choice")} className="bg-white text-black px-8 py-4 rounded-2xl font-black">Use Choice Matrix</button>
                     </div>
                 )}
             </div>
