@@ -75,8 +75,8 @@ export default function Dashboard() {
                 await logTransaction(hash);
                 setIsInternalSuccess(true);
                 refetchBalance();
-                // We'll also need a way to refresh TransactionHistory, 
-                // but since it polls every 10s it will show up shortly.
+                // Trigger global refresh for TransactionHistory
+                window.dispatchEvent(new CustomEvent('dropz:tx-refresh'));
             }
         } catch (error) {
             console.error("Send failed", error);

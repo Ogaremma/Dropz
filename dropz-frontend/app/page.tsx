@@ -10,7 +10,7 @@ export default function Home() {
   const { ready, authenticated } = useAuth();
   const router = useRouter();
 
-  const [modalType, setModalType] = useState<"seed" | "email" | null>(null);
+  const [modalType, setModalType] = useState<"signup" | "login" | null>(null);
 
   useEffect(() => {
     if (ready && authenticated) {
@@ -57,25 +57,24 @@ export default function Home() {
 
         <div className="flex flex-col md:flex-row items-center justify-center gap-6 pt-10">
           <button
-            onClick={() => setModalType("seed")}
+            onClick={() => setModalType("signup")}
             disabled={!ready || authenticated}
-            className="group relative w-full md:w-80 px-8 py-6 bg-white text-black font-black rounded-[2rem] text-xl shadow-[0_0_50px_rgba(255,255,255,0.2)] hover:scale-105 transition-all duration-500 disabled:opacity-50 overflow-hidden"
+            className="group relative w-full md:w-[280px] px-8 py-6 bg-white text-black font-black rounded-[2rem] text-xl shadow-[0_0_50px_rgba(255,255,255,0.2)] hover:scale-105 transition-all duration-500 disabled:opacity-50 overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
             <span className="relative flex items-center justify-center gap-3">
-              🚀 Access with Seedphrase
+              🚀 Create Account
             </span>
           </button>
 
           <button
-            onClick={() => setModalType("seed")} // Set to seed to trigger the unified choice modal
+            onClick={() => setModalType("login")}
             disabled={!ready || authenticated}
-            className="group relative w-full md:w-80 px-8 py-6 bg-indigo-600 text-white font-black rounded-[2rem] text-xl shadow-[0_0_50px_rgba(79,70,229,0.3)] hover:bg-indigo-500 hover:scale-105 transition-all duration-500 disabled:opacity-50 border border-indigo-400/30 overflow-hidden"
+            className="group relative w-full md:w-[280px] px-8 py-6 bg-indigo-600 font-black rounded-[2rem] text-xl shadow-[0_0_50px_rgba(79,70,229,0.3)] hover:bg-indigo-500 hover:scale-105 transition-all duration-500 disabled:opacity-50 border border-indigo-400/30 overflow-hidden"
           >
             <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-            <span className="relative flex items-center justify-center gap-3">
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.908 3.152-1.928 4.176-1.144 1.144-2.924 2.456-6.248 2.456-5.344 0-9.44-4.34-10.412-9.676-.084-.464-.128-.948-.128-1.44s.044-.976.128-1.44c.972-5.336 5.068-9.676 10.412-9.676 3.1 0 5.392 1.196 7.1 2.8l2.264-2.264C18.428 1.132 15.656 0 12.24 0 5.484 0 0 5.484 0 12.24s5.484 12.24 12.24 12.24c3.684 0 6.64-1.216 8.8-3.468 2.216-2.216 2.928-5.328 2.928-7.792 0-.74-.064-1.452-.184-2.12h-11.304v-.18z" /></svg>
-              Login with Gmail
+            <span className="relative flex items-center justify-center gap-3 text-white">
+              🗝️ Login
             </span>
           </button>
         </div>
@@ -86,7 +85,7 @@ export default function Home() {
       <AuthModals
         isOpen={modalType !== null}
         onClose={() => setModalType(null)}
-        type={modalType || "seed"}
+        initialFlow={modalType || "signup"}
       />
     </main>
   );

@@ -32,8 +32,17 @@ export default function TransactionHistory() {
         };
 
         fetchHistory();
-        const interval = setInterval(fetchHistory, 10000); // Polling every 10s
-        return () => clearInterval(interval);
+
+        // Polling as fallback
+        const interval = setInterval(fetchHistory, 10000);
+
+        // Listen for internal refresh events (e.g. from Dashboard after a send)
+        window.addEventListener('dropz:tx-refresh', fetchHistory);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('dropz:tx-refresh', fetchHistory);
+        };
     }, [address]);
 
     const getIcon = (type: string) => {
