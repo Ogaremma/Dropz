@@ -38,7 +38,6 @@ export default function CreateAirdrop() {
     }
 
     return (
-    return (
         <div className="min-h-screen bg-[#050505] text-white p-6 md:p-10 relative overflow-hidden">
             {/* Background Decorative Elements */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
