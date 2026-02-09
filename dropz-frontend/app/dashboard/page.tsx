@@ -6,11 +6,15 @@ import { useState, useCallback } from "react";
 import { useBalance, useSendTransaction } from "wagmi";
 import { parseEther } from "viem";
 import Link from "next/link";
+import TransactionHistory from "../components/TransactionHistory";
 
 export default function Dashboard() {
     const { address, isCustom } = useWallet();
     const { user, logout, authenticated, ready } = useAuth();
-    const { data: balance } = useBalance({ address: address as `0x${string}` });
+    const { data: balance } = useBalance({
+        address: address as `0x${string}`,
+        watch: true
+    });
 
     const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
     const [isSendModalOpen, setIsSendModalOpen] = useState(false);
@@ -119,138 +123,123 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    {/* Quick Actions - 5 Columns */}
-                    <div className="lg:col-span-5 bg-white/5 backdrop-blur-xl p-10 rounded-[3rem] border border-white/10 shadow-2xl">
-                        <h2 className="text-2xl font-black mb-10 text-white flex items-center gap-4">
-                            <span className="w-2 h-8 bg-indigo-500 rounded-full shadow-[0_0_15px_rgba(79,70,229,0.5)]"></span>
-                            Actions
-                        </h2>
-                        <div className="flex flex-col gap-6">
-                            <Link href="/dashboard/create" className="group flex items-center gap-6 p-6 rounded-[2rem] bg-indigo-500/5 hover:bg-indigo-500/10 transition-all border border-white/5 hover:border-indigo-500/40">
-                                <div className="text-5xl group-hover:scale-110 group-hover:rotate-12 transition-transform duration-500">🚀</div>
-                                <div>
-                                    <span className="font-black text-white text-xl block mb-1">Create Airdrop</span>
-                                    <span className="text-sm text-gray-500 font-medium">Launch your token mission</span>
-                                </div>
-                            </Link>
-                            <Link href="/dashboard/airdrops" className="group flex items-center gap-6 p-6 rounded-[2rem] bg-purple-500/5 hover:bg-purple-500/10 transition-all border border-white/5 hover:border-purple-500/40">
-                                <div className="text-5xl group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-500">🎁</div>
-                                <div>
-                                    <span className="font-black text-white text-xl block mb-1">Active Drops</span>
-                                    <span className="text-sm text-gray-500 font-medium">Claim and manage rewards</span>
-                                </div>
-                            </Link>
-                        </div>
+                    {/* Transaction History - 5 Columns */}
+                    <div className="lg:col-span-5">
+                        <TransactionHistory />
                     </div>
                 </div>
 
-                {/* Modals - Ultra Dark Premium Themed */}
-                {isDepositModalOpen && (
-                    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-6 backdrop-blur-2xl animate-in fade-in duration-500">
-                        <div className="bg-[#0a0a0b] border border-white/10 rounded-[3.5rem] p-12 max-w-lg w-full shadow-[0_0_100px_rgba(79,70,229,0.15)] relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                    {/* Quick Actions - 7 Columns */}
+                    <div className="lg:col-span-7 bg-white/5 backdrop-blur-xl p-10 rounded-[3rem] border border-white/10 shadow-2xl">
 
-                            <h3 className="text-4xl font-black mb-6 text-white tracking-tighter">Deposit <span className="text-indigo-500">ETH</span></h3>
-                            <p className="text-gray-400 text-lg mb-10 leading-relaxed font-medium">Send Sepolia testnet ETH to your secure vault address below.</p>
+                        {/* Modals - Ultra Dark Premium Themed */}
+                        {isDepositModalOpen && (
+                            <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-6 backdrop-blur-2xl animate-in fade-in duration-500">
+                                <div className="bg-[#0a0a0b] border border-white/10 rounded-[3.5rem] p-12 max-w-lg w-full shadow-[0_0_100px_rgba(79,70,229,0.15)] relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
 
-                            <div className="bg-white/[0.03] p-8 rounded-[2rem] mb-10 font-mono text-sm break-all border border-white/5 text-center select-all text-indigo-300 shadow-inner group relative">
-                                {address}
-                                <div className="mt-4 text-[10px] text-gray-600 font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Select to copy</div>
-                            </div>
+                                    <h3 className="text-4xl font-black mb-6 text-white tracking-tighter">Deposit <span className="text-indigo-500">ETH</span></h3>
+                                    <p className="text-gray-400 text-lg mb-10 leading-relaxed font-medium">Send Sepolia testnet ETH to your secure vault address below.</p>
 
-                            <div className="flex flex-col gap-4">
-                                <button
-                                    onClick={() => { navigator.clipboard.writeText(address || ""); alert("Address Copied!"); }}
-                                    className="w-full bg-white text-black py-5 rounded-2xl hover:scale-[1.02] transition-all font-black text-xl shadow-2xl shadow-indigo-600/10 active:scale-95"
-                                >
-                                    Copy Secure Address
-                                </button>
-                                <button
-                                    onClick={() => setIsDepositModalOpen(false)}
-                                    className="w-full py-5 rounded-2xl text-gray-500 hover:text-white hover:bg-white/5 transition-all font-black uppercase tracking-widest text-xs"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                                    <div className="bg-white/[0.03] p-8 rounded-[2rem] mb-10 font-mono text-sm break-all border border-white/5 text-center select-all text-indigo-300 shadow-inner group relative">
+                                        {address}
+                                        <div className="mt-4 text-[10px] text-gray-600 font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Select to copy</div>
+                                    </div>
 
-                {isSendModalOpen && (
-                    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-6 backdrop-blur-2xl animate-in fade-in duration-500">
-                        <div className="bg-[#0a0a0b] border border-white/10 rounded-[3.5rem] p-12 max-w-lg w-full shadow-[0_0_100px_rgba(79,70,229,0.15)] relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
-
-                            <h3 className="text-4xl font-black mb-6 text-white tracking-tighter">Send <span className="text-purple-500">ETH</span></h3>
-                            <p className="text-gray-400 text-lg mb-10 leading-relaxed font-medium">Move assets across the decentralized network instantly.</p>
-
-                            {isSuccess ? (
-                                <div className="text-center py-10 animate-in zoom-in-95 duration-700">
-                                    <div className="text-8xl mb-8 bg-green-500/10 w-32 h-32 rounded-full flex items-center justify-center mx-auto text-green-500 shadow-2xl shadow-green-500/20">✓</div>
-                                    <h4 className="text-3xl font-black text-white mb-3">Mission Successful</h4>
-                                    <p className="text-gray-500 mb-10 font-bold">Your transaction has been beamed to the blockchain.</p>
-                                    <button
-                                        onClick={() => { setIsSendModalOpen(false); window.location.reload(); }}
-                                        className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20"
-                                    >
-                                        Verify & Close
-                                    </button>
+                                    <div className="flex flex-col gap-4">
+                                        <button
+                                            onClick={() => { navigator.clipboard.writeText(address || ""); alert("Address Copied!"); }}
+                                            className="w-full bg-white text-black py-5 rounded-2xl hover:scale-[1.02] transition-all font-black text-xl shadow-2xl shadow-indigo-600/10 active:scale-95"
+                                        >
+                                            Copy Secure Address
+                                        </button>
+                                        <button
+                                            onClick={() => setIsDepositModalOpen(false)}
+                                            className="w-full py-5 rounded-2xl text-gray-500 hover:text-white hover:bg-white/5 transition-all font-black uppercase tracking-widest text-xs"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
                                 </div>
-                            ) : (
-                                <form onSubmit={handleSend} className="space-y-8">
-                                    <div className="space-y-3">
-                                        <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400 ml-1">Recipient Address</label>
-                                        <input
-                                            type="text"
-                                            placeholder="0x..."
-                                            value={recipient}
-                                            onChange={(e) => setRecipient(e.target.value)}
-                                            className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-5 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-white font-bold placeholder:text-gray-700 text-lg"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-3">
-                                        <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400 ml-1">Amount (ETH)</label>
-                                        <div className="relative">
-                                            <input
-                                                type="number"
-                                                step="0.0001"
-                                                placeholder="0.0"
-                                                value={amount}
-                                                onChange={(e) => setAmount(e.target.value)}
-                                                className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-5 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-white font-black placeholder:text-gray-700 text-2xl pr-16"
-                                                required
-                                            />
-                                            <span className="absolute right-6 top-1/2 -translate-y-1/2 font-black text-indigo-500/40 text-sm">ETH</span>
+                            </div>
+                        )}
+
+                        {isSendModalOpen && (
+                            <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-6 backdrop-blur-2xl animate-in fade-in duration-500">
+                                <div className="bg-[#0a0a0b] border border-white/10 rounded-[3.5rem] p-12 max-w-lg w-full shadow-[0_0_100px_rgba(79,70,229,0.15)] relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+
+                                    <h3 className="text-4xl font-black mb-6 text-white tracking-tighter">Send <span className="text-purple-500">ETH</span></h3>
+                                    <p className="text-gray-400 text-lg mb-10 leading-relaxed font-medium">Move assets across the decentralized network instantly.</p>
+
+                                    {isSuccess ? (
+                                        <div className="text-center py-10 animate-in zoom-in-95 duration-700">
+                                            <div className="text-8xl mb-8 bg-green-500/10 w-32 h-32 rounded-full flex items-center justify-center mx-auto text-green-500 shadow-2xl shadow-green-500/20">✓</div>
+                                            <h4 className="text-3xl font-black text-white mb-3">Mission Successful</h4>
+                                            <p className="text-gray-500 mb-10 font-bold">Your transaction has been beamed to the blockchain.</p>
+                                            <button
+                                                onClick={() => { setIsSendModalOpen(false); window.location.reload(); }}
+                                                className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20"
+                                            >
+                                                Verify & Close
+                                            </button>
                                         </div>
-                                    </div>
-                                    <div className="flex flex-col gap-4 pt-4">
-                                        <button
-                                            type="submit"
-                                            disabled={isSending}
-                                            className="w-full bg-white text-black py-6 rounded-2xl hover:scale-[1.02] transition-all font-black text-xl disabled:opacity-50 shadow-2xl active:scale-95 flex items-center justify-center gap-3"
-                                        >
-                                            {isSending ? (
-                                                <>
-                                                    <span className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin"></span>
-                                                    Broadcasting...
-                                                </>
-                                            ) : "Confirm Transfer"}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsSendModalOpen(false)}
-                                            className="w-full py-5 rounded-2xl text-gray-500 hover:text-white transition-all font-black uppercase tracking-widest text-xs"
-                                        >
-                                            Abort Mission
-                                        </button>
-                                    </div>
-                                </form>
-                            )}
-                        </div>
+                                    ) : (
+                                        <form onSubmit={handleSend} className="space-y-8">
+                                            <div className="space-y-3">
+                                                <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400 ml-1">Recipient Address</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="0x..."
+                                                    value={recipient}
+                                                    onChange={(e) => setRecipient(e.target.value)}
+                                                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-5 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-white font-bold placeholder:text-gray-700 text-lg"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-3">
+                                                <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400 ml-1">Amount (ETH)</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="number"
+                                                        step="0.0001"
+                                                        placeholder="0.0"
+                                                        value={amount}
+                                                        onChange={(e) => setAmount(e.target.value)}
+                                                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-5 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-white font-black placeholder:text-gray-700 text-2xl pr-16"
+                                                        required
+                                                    />
+                                                    <span className="absolute right-6 top-1/2 -translate-y-1/2 font-black text-indigo-500/40 text-sm">ETH</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col gap-4 pt-4">
+                                                <button
+                                                    type="submit"
+                                                    disabled={isSending}
+                                                    className="w-full bg-white text-black py-6 rounded-2xl hover:scale-[1.02] transition-all font-black text-xl disabled:opacity-50 shadow-2xl active:scale-95 flex items-center justify-center gap-3"
+                                                >
+                                                    {isSending ? (
+                                                        <>
+                                                            <span className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin"></span>
+                                                            Broadcasting...
+                                                        </>
+                                                    ) : "Confirm Transfer"}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsSendModalOpen(false)}
+                                                    className="w-full py-5 rounded-2xl text-gray-500 hover:text-white transition-all font-black uppercase tracking-widest text-xs"
+                                                >
+                                                    Abort Mission
+                                                </button>
+                                            </div>
+                                        </form>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
-            </div>
-        </main>
-    );
+                </main>
+                );
 }

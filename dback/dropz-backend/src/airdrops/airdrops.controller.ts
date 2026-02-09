@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Query } from '@nestjs/common';
 import { AirdropsService } from './airdrops.service';
 
 @Controller('airdrops')
@@ -11,6 +11,11 @@ export class AirdropsController {
     @Post('create')
     async create(@Body() createAirdropDto: any) {
         return this.airdropsService.create(createAirdropDto);
+    }
+
+    @Get('search')
+    async search(@Query('q') query: string) {
+        return this.airdropsService.search(query);
     }
 
     // Get all airdrops

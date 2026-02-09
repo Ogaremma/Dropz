@@ -27,4 +27,13 @@ export class UsersService {
     async getAllUsers() {
         return await this.userModel.find();
     }
+
+    async search(query: string) {
+        return this.userModel.find({
+            $or: [
+                { email: { $regex: query, $options: 'i' } },
+                { wallet: { $regex: query, $options: 'i' } }
+            ]
+        }).exec();
+    }
 }

@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AirdropsModule } from './airdrops/airdrops.module';
+import { TransactionsModule } from './transactions/transactions.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AirdropsModule } from './airdrops/airdrops.module';
     UsersModule,
     AuthModule,
     AirdropsModule,
+    TransactionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

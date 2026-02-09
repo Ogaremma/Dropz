@@ -4,17 +4,18 @@ import "./globals.css";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { PrivyWagmiConnector } from "@privy-io/wagmi-connector";
 import { chains, publicClient, webSocketPublicClient } from "../lib/wagmi";
+import Navbar from "./components/Navbar";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
+      <body className="bg-[#050505]">
         <PrivyProvider
           appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}
           config={{
             loginMethods: ["email"],
             appearance: {
-              theme: "light",
+              theme: "dark",
               accentColor: "#6366f1",
             },
             embeddedWallets: {
@@ -23,7 +24,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         >
           <PrivyWagmiConnector wagmiChainsConfig={{ chains, publicClient, webSocketPublicClient }}>
-            {children}
+            <Navbar />
+            <div className="pt-20">
+              {children}
+            </div>
           </PrivyWagmiConnector>
         </PrivyProvider>
       </body>

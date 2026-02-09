@@ -25,12 +25,22 @@ interface CreateAirdropDto {
     expiresAt?: Date;
 }
 
+import { TransactionsService } from '../transactions/transactions.service';
+
 @Injectable()
 export class AirdropsService {
     constructor(
         @InjectModel(Airdrop.name) private airdropModel: Model<Airdrop>,
         @InjectModel(AirdropParticipant.name) private participantModel: Model<AirdropParticipant>,
+        private transactionsService: TransactionsService,
     ) { }
+
+    // Search airdrops by name
+    async search(query: string) {
+        return this.airdropModel.find({
+            name: { $regex: query, $options: 'i' }
+        }).exec();
+    }
 
     // Create a new airdrop campaign
     async create(createAirdropDto: CreateAirdropDto) {
@@ -44,7 +54,18 @@ export class AirdropsService {
             taskRewardAmount: createAirdropDto.taskRewardAmount || '300000000000000000', // 0.3 tokens
             checkinRewardAmount: createAirdropDto.checkinRewardAmount || '100000000000000000', // 0.1 tokens
         });
-        return airdrop.save();
+        const savedAirdrop = await airdrop.save();
+
+        // Log transaction
+        await this.transactionsService.create({
+            wallet: createAirdropDto.owner,
+            type: 'CREATE',
+            amount: createAirdropDto.totalAmount,
+            tokenName: createAirdropDto.name,
+            status: 'success'
+        });
+
+        return savedAirdrop;
     }
 
     // Get all airdrops
@@ -229,7 +250,18 @@ export class AirdropsService {
             { totalDistributed: newTotalDistributed },
         ).exec();
 
-        return participant.save();
+        const savedParticipant = await participant.save();
+
+        // Log transaction
+        await this.transactionsService.create({
+            wallet: wallet,
+            type: 'CLAIM',
+            amount: claimAmount,
+            tokenName: airdrop.name,
+            status: 'success'
+        });
+
+        return savedParticipant;
     }
 
     // Get claimable amount for a user
