@@ -1,21 +1,30 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { ethers } from "ethers";
 import { usePrivy } from "@privy-io/react-auth";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://dropz.onrender.com";
 
 export function useAuth() {
-    const { login: loginWithPrivy, logout: logoutPrivy, authenticated, ready, user: privyUser } = usePrivy();
+    const { login: loginWithPrivy, logout: logoutPrivy, authenticated: privyAuthenticated, ready, user: privyUser } = usePrivy();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [customAuth, setCustomAuth] = useState(false);
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            setCustomAuth(!!localStorage.getItem("dropz_auth_token"));
+        }
+    }, []);
 
     const logout = useCallback(async () => {
         await logoutPrivy();
-        localStorage.removeItem("dropz_auth_token");
-        localStorage.removeItem("dropz_custom_wallet");
-        window.location.href = "/";
+        if (typeof window !== "undefined") {
+            localStorage.removeItem("dropz_auth_token");
+            localStorage.removeItem("dropz_custom_wallet");
+            window.location.href = "/";
+        }
     }, [logoutPrivy]);
 
     const registerWithEmail = async (email: string, pass: string) => {
@@ -128,12 +137,13 @@ export function useAuth() {
     };
 
     const isCustomAuthenticated = () => {
+        if (typeof window === "undefined") return false;
         return !!localStorage.getItem("dropz_auth_token");
     };
 
     return {
         ready,
-        authenticated: authenticated || isCustomAuthenticated(),
+        authenticated: privyAuthenticated || customAuth,
         loading,
         error,
         loginWithPrivy,
@@ -143,6 +153,6 @@ export function useAuth() {
         registerSeedphraseWallet,
         importSeedphraseWallet,
         logout,
-        user: privyUser || (isCustomAuthenticated() ? { custom: true } : null),
+        user: privyUser || (customAuth ? { custom: true } : null),
     };
 }
