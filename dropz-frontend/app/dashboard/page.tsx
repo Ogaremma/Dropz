@@ -1,15 +1,15 @@
 "use client";
 
 import { useWallet } from "../hooks/useWallet";
-import { usePrivy } from "@privy-io/react-auth";
+import { useAuth } from "../hooks/useAuth";
 import { useState } from "react";
 import { useBalance, useSendTransaction } from "wagmi";
 import { parseEther } from "viem";
 import Link from "next/link";
 
 export default function Dashboard() {
-    const { address } = useWallet();
-    const { user, logout, authenticated, ready } = usePrivy();
+    const { address, isCustom } = useWallet();
+    const { user, logout, authenticated, ready } = useAuth();
     const { data: balance } = useBalance({ address: address as `0x${string}` });
 
     const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
@@ -42,7 +42,7 @@ export default function Dashboard() {
                     <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Dashboard</h1>
                     <div className="flex items-center gap-4">
                         <span className="text-sm text-gray-500 hidden md:block">
-                            {user?.email?.address}
+                            {(user as any)?.email?.address || (address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "User")}
                         </span>
                         <button
                             onClick={logout}
