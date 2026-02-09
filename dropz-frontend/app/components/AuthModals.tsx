@@ -234,6 +234,13 @@ export default function AuthModals({ isOpen, onClose, initialFlow }: AuthModalPr
                             >
                                 {loading ? "Finalizing..." : "I Have Stored the Phrase"}
                             </button>
+                            <button
+                                type="button"
+                                onClick={() => setModalType("choice")}
+                                className="w-full py-4 rounded-2xl text-gray-500 hover:text-white transition-all font-black uppercase tracking-[0.2em] text-[10px]"
+                            >
+                                Go Back
+                            </button>
                         </div>
                     </div>
                 )}
