@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { useRouter } from "next/navigation";
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -10,6 +11,7 @@ interface AuthModalProps {
 }
 
 export default function AuthModals({ isOpen, onClose, type }: AuthModalProps) {
+    const router = useRouter();
     const {
         registerWithEmail,
         loginWithEmail,
@@ -36,7 +38,7 @@ export default function AuthModals({ isOpen, onClose, type }: AuthModalProps) {
             } else {
                 await registerWithEmail(email, password);
             }
-            window.location.href = "/dashboard";
+            router.push("/dashboard");
         } catch (err: any) {
             setError(err.message);
         }
@@ -58,7 +60,7 @@ export default function AuthModals({ isOpen, onClose, type }: AuthModalProps) {
         setError(null);
         try {
             await registerSeedphraseWallet(seedData.address, seedData.seedPhrase!);
-            window.location.href = "/dashboard";
+            router.push("/dashboard");
         } catch (err: any) {
             setError(err.message);
         }

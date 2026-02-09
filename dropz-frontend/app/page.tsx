@@ -1,7 +1,6 @@
 
 "use client";
 
-import { usePrivy } from "@privy-io/react-auth";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./hooks/useAuth";
@@ -83,9 +82,5 @@ export default function Home() {
         type={modalType || "seed"}
       />
     </main>
-  );
-}
-      </div >
-    </main >
   );
 }
