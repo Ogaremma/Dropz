@@ -5,13 +5,14 @@ import { useAuth } from "../hooks/useAuth";
 import { useState, useCallback } from "react";
 import { useBalance, useSendTransaction } from "wagmi";
 import { parseEther } from "viem";
+import { ethers } from "ethers";
 import Link from "next/link";
 import TransactionHistory from "../components/TransactionHistory";
 
 export default function Dashboard() {
-    const { address, isCustom } = useWallet();
+    const { address, isCustom, provider: customSigner } = useWallet();
     const { user, logout, authenticated, ready } = useAuth();
-    const { data: balance } = useBalance({
+    const { data: balance, refetch: refetchBalance } = useBalance({
         address: address as `0x${string}`,
         watch: true
     });
@@ -20,23 +21,70 @@ export default function Dashboard() {
     const [isSendModalOpen, setIsSendModalOpen] = useState(false);
     const [recipient, setRecipient] = useState("");
     const [amount, setAmount] = useState("");
+    const [isInternalSending, setIsInternalSending] = useState(false);
+    const [isInternalSuccess, setIsInternalSuccess] = useState(false);
 
-    const { sendTransaction, isLoading: isSending, isSuccess } = useSendTransaction();
+    const { sendTransactionAsync } = useSendTransaction();
+
+    const logTransaction = async (hash: string) => {
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://dropz.onrender.com'}/transactions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    wallet: address,
+                    type: 'SEND',
+                    amount: amount,
+                    recipient: recipient,
+                    transactionHash: hash,
+                    status: 'CONFIRMED'
+                })
+            });
+        } catch (e) {
+            console.error("Failed to log transaction", e);
+        }
+    };
 
     const handleSend = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!recipient || !amount) return;
+        if (!recipient || !amount || !address) return;
 
+        setIsInternalSending(true);
         try {
-            sendTransaction({
-                to: recipient as `0x${string}`,
-                value: parseEther(amount),
-            });
+            let hash = "";
+
+            if (isCustom && customSigner) {
+                // Custom Seedphrase Wallet Flow (Ethers)
+                const signer = customSigner as any as ethers.Wallet;
+                const tx = await signer.sendTransaction({
+                    to: recipient,
+                    value: ethers.parseEther(amount)
+                });
+                await tx.wait();
+                hash = tx.hash;
+            } else {
+                // Privy/Wagmi Embedded Wallet Flow
+                const result = await sendTransactionAsync({
+                    to: recipient as `0x${string}`,
+                    value: parseEther(amount),
+                });
+                hash = result.hash;
+            }
+
+            if (hash) {
+                await logTransaction(hash);
+                setIsInternalSuccess(true);
+                refetchBalance();
+                // We'll also need a way to refresh TransactionHistory, 
+                // but since it polls every 10s it will show up shortly.
+            }
         } catch (error) {
             console.error("Send failed", error);
-            alert("Transaction failed");
+            alert("Transaction failed: " + (error as any).message);
+        } finally {
+            setIsInternalSending(false);
         }
-    }, [recipient, amount, sendTransaction]);
+    }, [recipient, amount, address, isCustom, customSigner, sendTransactionAsync, refetchBalance]);
 
     if (!ready) return (
         <div className="min-h-screen flex items-center justify-center bg-[#050505] text-white">
@@ -195,13 +243,13 @@ export default function Dashboard() {
                         <h3 className="text-4xl font-black mb-6 text-white tracking-tighter">Send <span className="text-purple-500">ETH</span></h3>
                         <p className="text-gray-400 text-lg mb-10 leading-relaxed font-medium">Move assets across the decentralized network instantly.</p>
 
-                        {isSuccess ? (
+                        {isInternalSuccess ? (
                             <div className="text-center py-10 animate-in zoom-in-95 duration-700">
                                 <div className="text-8xl mb-8 bg-green-500/10 w-32 h-32 rounded-full flex items-center justify-center mx-auto text-green-500 shadow-2xl shadow-green-500/20">✓</div>
                                 <h4 className="text-3xl font-black text-white mb-3">Mission Successful</h4>
                                 <p className="text-gray-500 mb-10 font-bold">Your transaction has been beamed to the blockchain.</p>
                                 <button
-                                    onClick={() => { setIsSendModalOpen(false); window.location.reload(); }}
+                                    onClick={() => { setIsSendModalOpen(false); setIsInternalSuccess(false); setRecipient(""); setAmount(""); }}
                                     className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20"
                                 >
                                     Verify & Close
@@ -238,10 +286,10 @@ export default function Dashboard() {
                                 <div className="flex flex-col gap-4 pt-4">
                                     <button
                                         type="submit"
-                                        disabled={isSending}
+                                        disabled={isInternalSending}
                                         className="w-full bg-white text-black py-6 rounded-2xl hover:scale-[1.02] transition-all font-black text-xl disabled:opacity-50 shadow-2xl active:scale-95 flex items-center justify-center gap-3"
                                     >
-                                        {isSending ? (
+                                        {isInternalSending ? (
                                             <>
                                                 <span className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin"></span>
                                                 Broadcasting...

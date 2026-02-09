@@ -22,15 +22,18 @@ export function useWallet() {
 
     // Return custom wallet info if it exists, otherwise fallback to Privy
     if (customWalletData) {
+        // Connect to Sepolia for signing/provider capabilities
+        const provider = new ethers.JsonRpcProvider("https://ethereum-sepolia-rpc.publicnode.com");
+        const walletWithProvider = customWalletData.connect(provider);
+
         return {
             wallet: {
-                address: customWalletData.address,
-                // Mock properties to match Privy wallet object structure where needed
+                address: walletWithProvider.address,
                 walletClientType: "custom",
                 connectorType: "custom",
             },
-            address: customWalletData.address,
-            provider: customWalletData, // Ethers wallet can act as a signer/provider
+            address: walletWithProvider.address,
+            provider: walletWithProvider, // Now has provider attached
             isCustom: true,
         };
     }
