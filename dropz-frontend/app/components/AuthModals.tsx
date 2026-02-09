@@ -15,19 +15,15 @@ export default function AuthModals({ isOpen, onClose, initialFlow }: AuthModalPr
     const {
         loginWithPrivy,
         loginWithSeedphrase,
-        loginWithEmail,
-        registerWithEmail,
         generateSeedphrase,
         registerSeedphraseWallet,
         loading
     } = useAuth();
 
-    const [modalType, setModalType] = useState<"choice" | "seed" | "import" | "email">("choice");
+    const [modalType, setModalType] = useState<"choice" | "seed" | "import">("choice");
     const [step, setStep] = useState(1);
     const [seedData, setSeedData] = useState<{ address: string; seedPhrase?: string } | null>(null);
     const [importSeed, setImportSeed] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
 
     // Reset state when modal opens
@@ -60,20 +56,6 @@ export default function AuthModals({ isOpen, onClose, initialFlow }: AuthModalPr
         }
     };
 
-    const handleEmailAuth = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
-        try {
-            if (initialFlow === "login") {
-                await loginWithEmail(email, password);
-            } else {
-                await registerWithEmail(email, password);
-            }
-            router.push("/dashboard");
-        } catch (err: any) {
-            setError(err.message);
-        }
-    };
 
     const startSeedphraseFlow = async () => {
         setError(null);
@@ -107,8 +89,18 @@ export default function AuthModals({ isOpen, onClose, initialFlow }: AuthModalPr
                     onClick={onClose}
                     className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors"
                 >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
+
+                {modalType !== "choice" && (
+                    <button
+                        onClick={() => setModalType("choice")}
+                        className="absolute top-6 left-6 flex items-center gap-2 text-gray-500 hover:text-white transition-colors group"
+                    >
+                        <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Back</span>
+                    </button>
+                )}
 
                 {modalType === "choice" && (
                     <div className="space-y-8 py-4">
@@ -154,10 +146,10 @@ export default function AuthModals({ isOpen, onClose, initialFlow }: AuthModalPr
                             )}
 
                             <button
-                                onClick={() => setModalType("email")}
-                                className="w-full flex items-center justify-center p-5 rounded-2xl font-black text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm uppercase tracking-widest"
+                                onClick={onClose}
+                                className="w-full flex items-center justify-center p-5 rounded-2xl font-black text-gray-500 hover:text-white hover:bg-white/5 transition-all text-[10px] uppercase tracking-[0.3em]"
                             >
-                                {initialFlow === "signup" ? "Register with Email" : "Use Registered Email"}
+                                Abort Mission
                             </button>
                         </div>
                     </div>
@@ -192,7 +184,7 @@ export default function AuthModals({ isOpen, onClose, initialFlow }: AuthModalPr
                             <button
                                 type="button"
                                 onClick={() => setModalType("choice")}
-                                className="w-full text-gray-500 font-black text-xs uppercase tracking-widest hover:text-white transition-colors"
+                                className="w-full py-4 rounded-2xl text-gray-500 hover:text-white transition-all font-black uppercase tracking-[0.2em] text-[10px]"
                             >
                                 Go Back
                             </button>
@@ -246,62 +238,6 @@ export default function AuthModals({ isOpen, onClose, initialFlow }: AuthModalPr
                     </div>
                 )}
 
-                {modalType === "email" && (
-                    <div className="space-y-8 py-4">
-                        <div className="text-center space-y-3">
-                            <h2 className="text-3xl font-black tracking-tighter">
-                                {initialFlow === "signup" ? "New " : "Email "}
-                                <span className="text-indigo-500">Access</span>
-                            </h2>
-                            <p className="text-gray-400 font-medium">Enter your credentials below.</p>
-                        </div>
-
-                        <form onSubmit={handleEmailAuth} className="space-y-6">
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-[.2em] text-gray-500 mb-2 ml-1">Email Address</label>
-                                    <input
-                                        type="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="name@example.com"
-                                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-bold"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-[.2em] text-gray-500 mb-2 ml-1">Secure Password</label>
-                                    <input
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="••••••••"
-                                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-bold"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            {error && <p className="text-red-400 text-sm font-bold bg-red-400/10 p-4 rounded-xl border border-red-400/20">{error}</p>}
-
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full bg-white text-black py-5 rounded-2xl font-black text-xl hover:scale-[1.02] transition-all shadow-xl active:scale-95 disabled:opacity-50"
-                            >
-                                {loading ? "Processing..." : initialFlow === "signup" ? "Create Account" : "Sign In"}
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => setModalType("choice")}
-                                className="w-full text-gray-500 font-black text-xs uppercase tracking-widest hover:text-white transition-colors"
-                            >
-                                Go Back
-                            </button>
-                        </form>
-                    </div>
-                )}
             </div>
         </div>
     );

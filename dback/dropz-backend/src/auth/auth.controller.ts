@@ -1,9 +1,23 @@
-import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, BadRequestException, Patch } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
     constructor(private authService: AuthService) { }
+
+    // ===== PROFILE ENDPOINTS =====
+
+    @Patch('profile')
+    async updateProfile(@Body() body: any) {
+        if (!body.wallet) {
+            throw new BadRequestException('Wallet is required');
+        }
+        try {
+            return await this.authService.updateProfile(body.wallet, body);
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
 
     // ===== SEED PHRASE ENDPOINTS =====
 
@@ -32,7 +46,7 @@ export class AuthController {
         }
     }
 
-    // ===== EMAIL ENDPOINTS =====
+    // ===== EMAIL ENDPOINTS (Legacy/Direct - UI will prefer Gmail) =====
 
     @Post('email/register')
     async registerEmail(@Body() body: { email: string; password: string }) {

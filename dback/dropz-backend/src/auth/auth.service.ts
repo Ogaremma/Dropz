@@ -141,4 +141,18 @@ export class AuthService {
             throw new Error('Invalid token');
         }
     }
+
+    // Update user profile
+    async updateProfile(wallet: string, data: Partial<User>) {
+        const user = await this.userModel.findOne({ wallet });
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        if (data.username !== undefined) user.username = data.username;
+        if (data.bio !== undefined) user.bio = data.bio;
+        if (data.avatarUrl !== undefined) user.avatarUrl = data.avatarUrl;
+
+        return await user.save();
+    }
 }

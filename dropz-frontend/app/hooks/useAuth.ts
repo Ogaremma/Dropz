@@ -27,42 +27,24 @@ export function useAuth() {
         }
     }, [logoutPrivy]);
 
-    const registerWithEmail = async (email: string, pass: string) => {
+    const updateProfile = async (data: any) => {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`${BACKEND_URL}/auth/email/register`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password: pass }),
+            const token = localStorage.getItem("dropz_auth_token");
+            const wallet = JSON.parse(localStorage.getItem("dropz_custom_wallet") || "{}").address;
+
+            const res = await fetch(`${BACKEND_URL}/auth/profile`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ ...data, wallet }),
             });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Registration failed");
-
-            localStorage.setItem("dropz_auth_token", data.token);
-            return data;
-        } catch (err: any) {
-            setError(err.message);
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const loginWithEmail = async (email: string, pass: string) => {
-        setLoading(true);
-        setError(null);
-        try {
-            const res = await fetch(`${BACKEND_URL}/auth/email/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password: pass }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Login failed");
-
-            localStorage.setItem("dropz_auth_token", data.token);
-            return data;
+            const updatedUser = await res.json();
+            if (!res.ok) throw new Error(updatedUser.message || "Update failed");
+            return updatedUser;
         } catch (err: any) {
             setError(err.message);
             throw err;
@@ -103,6 +85,7 @@ export function useAuth() {
 
             localStorage.setItem("dropz_auth_token", data.token);
             localStorage.setItem("dropz_custom_wallet", JSON.stringify({ address, seed }));
+            setCustomAuth(true);
             return data;
         } catch (err: any) {
             setError(err.message);
@@ -137,22 +120,16 @@ export function useAuth() {
         }
     };
 
-    const isCustomAuthenticated = () => {
-        if (typeof window === "undefined") return false;
-        return !!localStorage.getItem("dropz_auth_token");
-    };
-
     return {
         ready,
         authenticated: privyAuthenticated || customAuth,
         loading,
         error,
         loginWithPrivy,
-        registerWithEmail,
-        loginWithEmail,
         generateSeedphrase,
         registerSeedphraseWallet,
         loginWithSeedphrase,
+        updateProfile,
         logout,
         user: privyUser || (customAuth ? { custom: true } : null),
     };

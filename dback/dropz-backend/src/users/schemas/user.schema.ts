@@ -5,10 +5,16 @@ import { Document } from 'mongoose';
 export class User extends Document {
     @Prop({ required: true, unique: true }) wallet: string;
     @Prop() email?: string;
-    @Prop() passwordHash?: string; // hashed password for email auth
-    @Prop() encryptedJson?: string; // encrypted seed phrase/keystore
-    @Prop() seedPhrase?: string; // unencrypted seed phrase (optional, for showing to user once)
-    @Prop() loginType: string; // 'seed' or 'email'
+    @Prop() passwordHash?: string;
+    @Prop() encryptedJson?: string;
+    @Prop() seedPhrase?: string;
+    @Prop() loginType: string;
+
+    // Profile Fields
+    @Prop() username?: string;
+    @Prop() bio?: string;
+    @Prop() avatarUrl?: string;
+
     @Prop() createdAt: Date;
 }
 

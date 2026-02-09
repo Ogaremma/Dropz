@@ -38,9 +38,11 @@ export default function Navbar() {
 
                     <button
                         onClick={() => setIsSettingsOpen(true)}
-                        className="h-10 w-10 flex items-center justify-center rounded-xl bg-indigo-500 text-white shadow-xl shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all text-xl"
+                        className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 hover:scale-105 active:scale-95 transition-all text-sm"
                     >
-                        ⚙️
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
                     </button>
 
                     <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 border-2 border-white/10 flex items-center justify-center text-xs font-black cursor-pointer hover:rotate-12 transition-transform">
