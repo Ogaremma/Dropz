@@ -2,7 +2,7 @@
 
 import { useWallet } from "../hooks/useWallet";
 import { useAuth } from "../hooks/useAuth";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useBalance, useSendTransaction } from "wagmi";
 import { parseEther } from "viem";
 import { ethers } from "ethers";

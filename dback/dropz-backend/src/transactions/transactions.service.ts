@@ -26,47 +26,79 @@ export class TransactionsService {
 
     async syncWithBlockchain(wallet: string) {
         const rpcUrl = this.configService.get<string>('RPC_URL');
-        if (!rpcUrl) return;
+        if (!rpcUrl) return { success: false, error: 'RPC_URL not configured' };
 
         try {
-            const response = await fetch(rpcUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    jsonrpc: "2.0",
-                    id: 1,
-                    method: "alchemy_getAssetTransfers",
-                    params: [
-                        {
-                            fromBlock: "0x0",
-                            toAddress: wallet,
-                            category: ["external"],
-                            order: "desc"
+            // Use ethers.js to get transaction history
+            const ethers = require('ethers');
+            const provider = new ethers.JsonRpcProvider(rpcUrl);
+
+            // Get the current block number
+            const currentBlock = await provider.getBlockNumber();
+
+            // Look back 10000 blocks (roughly 1-2 days on Sepolia)
+            const fromBlock = Math.max(0, currentBlock - 10000);
+
+            // Get transaction count to determine how many transactions to check
+            const txCount = await provider.getTransactionCount(wallet);
+
+            if (txCount === 0) {
+                return { success: true, count: 0, message: 'No transactions found' };
+            }
+
+            // Scan recent blocks for incoming transactions
+            let foundTransactions = 0;
+            const batchSize = 100;
+
+            for (let i = currentBlock; i >= fromBlock; i -= batchSize) {
+                const startBlock = Math.max(fromBlock, i - batchSize + 1);
+                const endBlock = i;
+
+                try {
+                    // Get block with transactions
+                    for (let blockNum = startBlock; blockNum <= endBlock; blockNum++) {
+                        const block = await provider.getBlock(blockNum, true);
+
+                        if (!block || !block.transactions) continue;
+
+                        // Check each transaction in the block
+                        for (const tx of block.transactions) {
+                            if (typeof tx === 'string') continue;
+
+                            // Check if transaction is TO our wallet (incoming)
+                            if (tx.to && tx.to.toLowerCase() === wallet.toLowerCase()) {
+                                const existing = await this.transactionModel.findOne({
+                                    transactionHash: tx.hash
+                                });
+
+                                if (!existing) {
+                                    const valueInEth = ethers.formatEther(tx.value || '0');
+
+                                    await this.create({
+                                        wallet: wallet.toLowerCase(),
+                                        type: 'DEPOSIT',
+                                        amount: valueInEth,
+                                        transactionHash: tx.hash,
+                                        status: 'CONFIRMED',
+                                        tokenName: 'ETH'
+                                    });
+
+                                    foundTransactions++;
+                                }
+                            }
                         }
-                    ]
-                })
-            });
-
-            const data = await response.json();
-            const transfers = data.result?.transfers || [];
-
-            for (const transfer of transfers) {
-                // Alchemy returns asset name, if null/empty it's usually ETH for external
-                if (transfer.asset === 'ETH' || !transfer.asset) {
-                    const existing = await this.transactionModel.findOne({ transactionHash: transfer.hash });
-                    if (!existing) {
-                        await this.create({
-                            wallet: wallet.toLowerCase(),
-                            type: 'DEPOSIT',
-                            amount: transfer.value.toString(),
-                            transactionHash: transfer.hash,
-                            status: 'CONFIRMED',
-                            tokenName: 'ETH'
-                        });
                     }
+                } catch (blockError) {
+                    console.error(`Error scanning blocks ${startBlock}-${endBlock}:`, blockError);
+                    // Continue with next batch even if this one fails
                 }
             }
-            return { success: true, count: transfers.length };
+
+            return {
+                success: true,
+                count: foundTransactions,
+                message: `Scanned blocks ${fromBlock} to ${currentBlock}`
+            };
         } catch (error) {
             console.error("Sync failed", error);
             return { success: false, error: error.message };
