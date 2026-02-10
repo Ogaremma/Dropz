@@ -4,40 +4,40 @@ import { Document } from 'mongoose';
 @Schema()
 export class AirdropParticipant extends Document {
     @Prop({ required: true })
-    airdropId: string; // Reference to airdrop
+    airdropId: string;
 
     @Prop({ required: true })
-    wallet: string; // User wallet address
+    wallet: string;
 
     @Prop({ type: [String], default: [] })
-    completedTasks: string[]; // List of completed task IDs
+    completedTasks: string[];
 
     @Prop({ default: 0 })
-    tasksCompleted: number; // Number of tasks completed
+    tasksCompleted: number;
 
     @Prop({ default: '0' })
-    tasksEarnings: string; // Amount earned from tasks (in wei)
+    tasksEarnings: string;
 
     @Prop({ type: [Date], default: [] })
-    checkinDates: Date[]; // Dates of check-ins
+    checkinDates: Date[];
 
     @Prop({ default: 0 })
-    checkinsCompleted: number; // Number of daily check-ins completed
+    checkinsCompleted: number;
 
     @Prop({ default: '0' })
-    checkinsEarnings: string; // Amount earned from check-ins (in wei)
+    checkinsEarnings: string;
 
     @Prop({ default: '0' })
-    totalEarnings: string; // Total earnings: tasks + check-ins
+    totalEarnings: string;
 
     @Prop({ default: false })
-    hasClaimed: boolean; // Whether user has claimed all earnings
+    hasClaimed: boolean;
 
     @Prop({ required: false })
-    lastClaimedAt: Date; // When they last claimed
+    lastClaimedAt: Date;
 
     @Prop({ required: false })
-    merkleProof: string[]; // Merkle proof for this user (for on-chain verification)
+    merkleProof: string[];
 
     @Prop({ default: Date.now })
     joinedAt: Date;

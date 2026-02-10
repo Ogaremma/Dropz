@@ -86,6 +86,30 @@ export default function Dashboard() {
         }
     }, [recipient, amount, address, isCustom, customSigner, sendTransactionAsync, refetchBalance]);
 
+    // Blockchain Sync on Mount
+    useEffect(() => {
+        if (!address) return;
+        const sync = async () => {
+            try {
+                await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://dropz.onrender.com'}/transactions/${address}/sync`, {
+                    method: 'POST'
+                });
+                window.dispatchEvent(new CustomEvent('dropz:tx-refresh'));
+            } catch (e) {
+                console.error("Sync failed", e);
+            }
+        };
+        sync();
+    }, [address]);
+
+    // Fallback periodic refresh
+    useEffect(() => {
+        const interval = setInterval(() => {
+            refetchBalance();
+        }, 15000);
+        return () => clearInterval(interval);
+    }, [refetchBalance]);
+
     if (!ready) return (
         <div className="min-h-screen flex items-center justify-center bg-[#050505] text-white">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>

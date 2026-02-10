@@ -7,58 +7,58 @@ interface Task {
     description: string;
     type: 'twitter_follow' | 'twitter_retweet' | 'twitter_like' | 'twitter_comment' | 'discord' | 'custom';
     url?: string;
-    rewardAmount: string; // Amount earned per task (in wei, e.g., "0.3" tokens)
+    rewardAmount: string;
 }
 
 @Schema()
 export class Airdrop extends Document {
     @Prop({ required: true })
-    owner: string; // Wallet address of airdrop creator
+    owner: string;
 
     @Prop({ required: true })
-    name: string; // Name of the airdrop
+    name: string;
 
     @Prop({ required: true })
-    tokenAddress: string; // ERC-20 token contract address
+    tokenAddress: string;
 
     @Prop({ required: true })
-    totalAmount: string; // Total amount to distribute (in wei)
+    totalAmount: string;
 
     @Prop({ type: [Object], default: [] })
-    tasks: Task[]; // List of tasks users can complete
+    tasks: Task[];
 
-    @Prop({ default: '300000000000000000' }) // 0.3 tokens in wei
-    taskRewardAmount: string; // Amount earned per task completion
+    @Prop({ default: '300000000000000000' })
+    taskRewardAmount: string;
 
-    @Prop({ default: '100000000000000000' }) // 0.1 tokens in wei
-    checkinRewardAmount: string; // Amount earned per daily check-in
+    @Prop({ default: '100000000000000000' })
+    checkinRewardAmount: string;
 
     @Prop({ default: 'pending' })
-    status: string; // pending, active, completed, cancelled
+    status: string;
 
     @Prop({ default: '0' })
-    totalDistributed: string; // Total amount distributed so far
+    totalDistributed: string;
 
     @Prop({ default: 0 })
-    participantsCount: number; // Total unique participants
+    participantsCount: number;
 
     @Prop({ default: 0 })
-    totalTasksCompleted: number; // Total task completions across all users
+    totalTasksCompleted: number;
 
     @Prop({ default: 0 })
-    totalCheckinsCompleted: number; // Total check-ins across all users
+    totalCheckinsCompleted: number;
 
     @Prop({ type: [String], default: [] })
-    participants: string[]; // List of user wallets participating
+    participants: string[];
 
     @Prop({ default: Date.now })
     createdAt: Date;
 
     @Prop({ required: false })
-    expiresAt: Date; // Optional expiration date
+    expiresAt: Date;
 
     @Prop({ type: Object, required: false })
-    metadata: Record<string, any>; // Extra metadata (description, logo, etc.)
+    metadata: Record<string, any>;
 }
 
 export const AirdropSchema = SchemaFactory.createForClass(Airdrop);

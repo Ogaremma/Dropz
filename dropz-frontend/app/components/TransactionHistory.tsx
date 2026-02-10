@@ -15,22 +15,37 @@ export default function TransactionHistory() {
     const { address } = useWallet();
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isSyncing, setIsSyncing] = useState(false);
+
+    const fetchHistory = async () => {
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://dropz.onrender.com'}/transactions/${address}`);
+            const data = await res.json();
+            setTransactions(Array.isArray(data) ? data : []);
+        } catch (e) {
+            console.error("Failed to fetch history", e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleManualSync = async () => {
+        if (!address || isSyncing) return;
+        setIsSyncing(true);
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://dropz.onrender.com'}/transactions/${address}/sync`, {
+                method: 'POST'
+            });
+            await fetchHistory();
+        } catch (e) {
+            console.error("Manual sync failed", e);
+        } finally {
+            setIsSyncing(false);
+        }
+    };
 
     useEffect(() => {
         if (!address) return;
-
-        const fetchHistory = async () => {
-            try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://dropz.onrender.com'}/transactions/${address}`);
-                const data = await res.json();
-                setTransactions(Array.isArray(data) ? data : []);
-            } catch (e) {
-                console.error("Failed to fetch history", e);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchHistory();
 
         // Polling as fallback
@@ -71,7 +86,14 @@ export default function TransactionHistory() {
                     <span className="w-2 h-8 bg-purple-500 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.5)]"></span>
                     History
                 </div>
-                <span className="text-[10px] text-gray-600 font-black uppercase tracking-widest px-3 py-1 bg-white/5 rounded-full">Live Signal</span>
+                <button
+                    onClick={handleManualSync}
+                    disabled={isSyncing}
+                    className="group flex items-center gap-2 text-[10px] text-gray-400 hover:text-indigo-400 font-black uppercase tracking-widest px-3 py-1 bg-white/5 hover:bg-indigo-500/10 rounded-full transition-all border border-transparent hover:border-indigo-500/30"
+                >
+                    <span className={`w-3 h-3 ${isSyncing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`}>🔄</span>
+                    {isSyncing ? 'Syncing...' : 'Live Signal'}
+                </button>
             </h2>
 
             <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">

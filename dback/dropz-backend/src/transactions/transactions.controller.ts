@@ -15,4 +15,9 @@ export class TransactionsController {
     async getByWallet(@Param('wallet') wallet: string) {
         return this.transactionsService.findAllByWallet(wallet);
     }
+
+    @Post(':wallet/sync')
+    async syncByWallet(@Param('wallet') wallet: string) {
+        return this.transactionsService.syncWithBlockchain(wallet);
+    }
 }
