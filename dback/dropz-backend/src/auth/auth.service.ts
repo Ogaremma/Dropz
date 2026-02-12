@@ -61,7 +61,6 @@ export class AuthService {
             await user.save();
         }
 
-        // Device-based session timeout: 2hrs for desktop, 1hr for mobile
         const expiresIn = deviceType === 'mobile' ? '1h' : '2h';
         const token = this.jwtService.sign(
             { wallet: normalizedWallet, userId: user._id },

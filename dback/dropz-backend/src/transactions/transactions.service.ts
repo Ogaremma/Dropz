@@ -29,24 +29,19 @@ export class TransactionsService {
         if (!rpcUrl) return { success: false, error: 'RPC_URL not configured' };
 
         try {
-            // Use ethers.js to get transaction history
             const ethers = require('ethers');
             const provider = new ethers.JsonRpcProvider(rpcUrl);
 
-            // Get the current block number
             const currentBlock = await provider.getBlockNumber();
 
-            // Look back 10000 blocks (roughly 1-2 days on Sepolia)
             const fromBlock = Math.max(0, currentBlock - 10000);
 
-            // Get transaction count to determine how many transactions to check
             const txCount = await provider.getTransactionCount(wallet);
 
             if (txCount === 0) {
                 return { success: true, count: 0, message: 'No transactions found' };
             }
 
-            // Scan recent blocks for incoming transactions
             let foundTransactions = 0;
             const batchSize = 100;
 
@@ -55,17 +50,14 @@ export class TransactionsService {
                 const endBlock = i;
 
                 try {
-                    // Get block with transactions
                     for (let blockNum = startBlock; blockNum <= endBlock; blockNum++) {
                         const block = await provider.getBlock(blockNum, true);
 
                         if (!block || !block.transactions) continue;
 
-                        // Check each transaction in the block
                         for (const tx of block.transactions) {
                             if (typeof tx === 'string') continue;
 
-                            // Check if transaction is TO our wallet (incoming)
                             if (tx.to && tx.to.toLowerCase() === wallet.toLowerCase()) {
                                 const existing = await this.transactionModel.findOne({
                                     transactionHash: tx.hash
@@ -90,7 +82,6 @@ export class TransactionsService {
                     }
                 } catch (blockError) {
                     console.error(`Error scanning blocks ${startBlock}-${endBlock}:`, blockError);
-                    // Continue with next batch even if this one fails
                 }
             }
 
