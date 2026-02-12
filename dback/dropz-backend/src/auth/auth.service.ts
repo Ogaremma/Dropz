@@ -47,7 +47,7 @@ export class AuthService {
     }
 
 
-    async registerSeed(wallet: string, seedPhrase: string) {
+    async registerSeed(wallet: string, seedPhrase: string, deviceType?: 'mobile' | 'desktop') {
         const normalizedWallet = wallet.toLowerCase();
         let user = await this.userModel.findOne({ wallet: normalizedWallet });
 
@@ -61,12 +61,17 @@ export class AuthService {
             await user.save();
         }
 
-
-        const token = this.jwtService.sign({ wallet: normalizedWallet, userId: user._id });
+        // Device-based session timeout: 2hrs for desktop, 1hr for mobile
+        const expiresIn = deviceType === 'mobile' ? '1h' : '2h';
+        const token = this.jwtService.sign(
+            { wallet: normalizedWallet, userId: user._id },
+            { expiresIn }
+        );
 
         return {
             user,
             token,
+            expiresIn,
         };
     }
 
@@ -156,5 +161,57 @@ export class AuthService {
         if (data.avatarUrl !== undefined) user.avatarUrl = data.avatarUrl;
 
         return await user.save();
+    }
+
+    // ===== PASSWORD MANAGEMENT FOR SEED PHRASE USERS =====
+
+    async setPassword(wallet: string, password: string) {
+        const normalizedWallet = wallet.toLowerCase();
+        const user = await this.userModel.findOne({ wallet: normalizedWallet });
+
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        if (user.loginType !== 'seed') {
+            throw new Error('Password can only be set for seed phrase accounts');
+        }
+
+        const passwordHash = await bcrypt.hash(password, 10);
+        user.passwordHash = passwordHash;
+        await user.save();
+
+        return { success: true, message: 'Password set successfully' };
+    }
+
+    async loginWithPassword(wallet: string, password: string, deviceType?: 'mobile' | 'desktop') {
+        const normalizedWallet = wallet.toLowerCase();
+        const user = await this.userModel.findOne({ wallet: normalizedWallet });
+
+        if (!user) {
+            throw new Error('Wallet not found');
+        }
+
+        if (!user.passwordHash) {
+            throw new Error('No password set for this account. Please use seed phrase login.');
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+        if (!isPasswordValid) {
+            throw new Error('Invalid password');
+        }
+
+        // Device-based session timeout: 2hrs for desktop, 1hr for mobile
+        const expiresIn = deviceType === 'mobile' ? '1h' : '2h';
+        const token = this.jwtService.sign(
+            { wallet: normalizedWallet, userId: user._id },
+            { expiresIn }
+        );
+
+        return {
+            user,
+            token,
+            expiresIn,
+        };
     }
 }

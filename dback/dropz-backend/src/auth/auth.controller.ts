@@ -35,12 +35,38 @@ export class AuthController {
     }
 
     @Post('seed/register')
-    async registerSeed(@Body() body: { wallet: string; seedPhrase: string }) {
+    async registerSeed(@Body() body: { wallet: string; seedPhrase: string; deviceType?: 'mobile' | 'desktop' }) {
         if (!body.wallet || !body.seedPhrase) {
             throw new BadRequestException('Wallet and seed phrase are required');
         }
         try {
-            return await this.authService.registerSeed(body.wallet, body.seedPhrase);
+            return await this.authService.registerSeed(body.wallet, body.seedPhrase, body.deviceType);
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
+    // ===== PASSWORD MANAGEMENT ENDPOINTS =====
+
+    @Post('set-password')
+    async setPassword(@Body() body: { wallet: string; password: string }) {
+        if (!body.wallet || !body.password) {
+            throw new BadRequestException('Wallet and password are required');
+        }
+        try {
+            return await this.authService.setPassword(body.wallet, body.password);
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
+    @Post('login-password')
+    async loginWithPassword(@Body() body: { wallet: string; password: string; deviceType?: 'mobile' | 'desktop' }) {
+        if (!body.wallet || !body.password) {
+            throw new BadRequestException('Wallet and password are required');
+        }
+        try {
+            return await this.authService.loginWithPassword(body.wallet, body.password, body.deviceType);
         } catch (error) {
             throw new BadRequestException(error.message);
         }

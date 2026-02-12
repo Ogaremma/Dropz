@@ -15,15 +15,18 @@ export default function AuthModals({ isOpen, onClose, initialFlow }: AuthModalPr
     const {
         loginWithPrivy,
         loginWithSeedphrase,
+        loginWithPassword,
         generateSeedphrase,
         registerSeedphraseWallet,
         loading
     } = useAuth();
 
-    const [modalType, setModalType] = useState<"choice" | "seed" | "import">("choice");
+    const [modalType, setModalType] = useState<"choice" | "seed" | "import" | "password">("choice");
     const [step, setStep] = useState(1);
     const [seedData, setSeedData] = useState<{ address: string; seedPhrase?: string } | null>(null);
     const [importSeed, setImportSeed] = useState("");
+    const [walletAddress, setWalletAddress] = useState("");
+    const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
 
     // Reset state when modal opens
@@ -74,9 +77,20 @@ export default function AuthModals({ isOpen, onClose, initialFlow }: AuthModalPr
         setError(null);
         try {
             await registerSeedphraseWallet(seedData.address, seedData.seedPhrase!);
-            router.push("/dashboard");
+            router.push("/set-password");
         } catch (err: any) {
             setError(err.message);
+        }
+    };
+
+    const handlePasswordLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        try {
+            await loginWithPassword(walletAddress, password);
+            router.push("/dashboard");
+        } catch (err: any) {
+            setError(err.message || "Invalid credentials");
         }
     };
 
@@ -136,13 +150,22 @@ export default function AuthModals({ isOpen, onClose, initialFlow }: AuthModalPr
                                     Create Wallet
                                 </button>
                             ) : (
-                                <button
-                                    onClick={() => setModalType("import")}
-                                    className="w-full flex items-center gap-4 bg-indigo-600 text-white p-5 rounded-2xl font-black text-lg hover:bg-indigo-500 hover:scale-[1.02] transition-all shadow-xl shadow-indigo-600/20 active:scale-95 border border-indigo-400/30"
-                                >
-                                    <div className="bg-white/10 p-2 rounded-lg">🗝️</div>
-                                    Import Existing Account or Wallet
-                                </button>
+                                <>
+                                    <button
+                                        onClick={() => setModalType("import")}
+                                        className="w-full flex items-center gap-4 bg-indigo-600 text-white p-5 rounded-2xl font-black text-lg hover:bg-indigo-500 hover:scale-[1.02] transition-all shadow-xl shadow-indigo-600/20 active:scale-95 border border-indigo-400/30"
+                                    >
+                                        <div className="bg-white/10 p-2 rounded-lg">🗝️</div>
+                                        Login with Seed Phrase
+                                    </button>
+                                    <button
+                                        onClick={() => setModalType("password")}
+                                        className="w-full flex items-center gap-4 bg-purple-600 text-white p-5 rounded-2xl font-black text-lg hover:bg-purple-500 hover:scale-[1.02] transition-all shadow-xl shadow-purple-600/20 active:scale-95 border border-purple-400/30"
+                                    >
+                                        <div className="bg-white/10 p-2 rounded-lg">🔐</div>
+                                        Login with Password
+                                    </button>
+                                </>
                             )}
 
                             <button
@@ -242,6 +265,63 @@ export default function AuthModals({ isOpen, onClose, initialFlow }: AuthModalPr
                                 Go Back
                             </button>
                         </div>
+                    </div>
+                )}
+
+                {modalType === "password" && (
+                    <div className="space-y-8 py-4">
+                        <div className="text-center space-y-3">
+                            <h2 className="text-3xl font-black tracking-tighter">Password <span className="text-purple-500">Login</span></h2>
+                            <p className="text-gray-400 font-medium">Enter your wallet address and password.</p>
+                        </div>
+
+                        <form onSubmit={handlePasswordLogin} className="space-y-6">
+                            <div className="space-y-3">
+                                <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-purple-400 ml-1">
+                                    Wallet Address
+                                </label>
+                                <input
+                                    type="text"
+                                    value={walletAddress}
+                                    onChange={(e) => setWalletAddress(e.target.value)}
+                                    placeholder="0x..."
+                                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-5 font-mono text-sm focus:ring-2 focus:ring-purple-500 outline-none transition-all"
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-purple-400 ml-1">
+                                    Password
+                                </label>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="Enter your password"
+                                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-5 text-sm focus:ring-2 focus:ring-purple-500 outline-none transition-all"
+                                    required
+                                />
+                            </div>
+
+                            {error && <p className="text-red-400 text-sm font-bold bg-red-400/10 p-4 rounded-xl border border-red-400/20">{error}</p>}
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full bg-white text-black py-5 rounded-2xl font-black text-xl hover:scale-[1.02] transition-all shadow-xl active:scale-95 disabled:opacity-50"
+                            >
+                                {loading ? "Authenticating..." : "Login"}
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setModalType("choice")}
+                                className="w-full py-4 rounded-2xl text-gray-500 hover:text-white transition-all font-black uppercase tracking-[0.2em] text-[10px]"
+                            >
+                                Go Back
+                            </button>
+                        </form>
                     </div>
                 )}
 
