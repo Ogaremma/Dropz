@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../hooks/useAuth";
 import { useWallet } from "../hooks/useWallet";
 
-export default function SetPasswordPage() {
+function SetPasswordContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { setPassword, authenticated, ready } = useAuth();
@@ -181,5 +181,17 @@ export default function SetPasswordPage() {
                 </div>
             </div>
         </main>
+    );
+}
+
+export default function SetPasswordPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-[#050505] text-white">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+            </div>
+        }>
+            <SetPasswordContent />
+        </Suspense>
     );
 }
