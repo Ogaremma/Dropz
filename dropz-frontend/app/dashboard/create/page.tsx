@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useWallet } from "../../../hooks/useWallet";
+import { useWallet } from "../../hooks/useWallet";
 import { useDropzContract } from "../../../hooks/useDropzContract";
 import { useWalletClient } from "wagmi";
 import { useRouter } from "next/navigation";

@@ -4,10 +4,12 @@ import { useAirdrops } from "../../../hooks/useAirdrops";
 import { useDropzContract } from "../../../hooks/useDropzContract";
 import { useWalletClient } from "wagmi";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, use } from "react";
 
-export default function AirdropDetail({ params }: { params: { id: string } }) {
+export default function AirdropDetail({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const { airdrops, loading } = useAirdrops();
+
     const { address, abi } = useDropzContract();
     const { data: walletClient } = useWalletClient();
     const router = useRouter();
@@ -19,7 +21,7 @@ export default function AirdropDetail({ params }: { params: { id: string } }) {
         </div>
     );
 
-    const airdropIndex = parseInt(params.id);
+    const airdropIndex = parseInt(id);
     const airdrop = airdrops[airdropIndex];
 
     if (!airdrop) return (
