@@ -38,9 +38,11 @@ export class TransactionsService {
 
             const txCount = await provider.getTransactionCount(wallet);
 
-            if (txCount === 0) {
-                return { success: true, count: 0, message: 'No transactions found' };
-            }
+            // Even if txCount is 0 (no outgoing), we might have incoming transactions (deposits)
+            // so we should still scan if we are looking for deposits.
+            // However, getTransactionCount only counts outgoing. 
+            // We will proceed to scan blocks.
+
 
             let foundTransactions = 0;
             const batchSize = 100;

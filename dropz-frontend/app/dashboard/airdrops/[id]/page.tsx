@@ -31,7 +31,11 @@ export default function AirdropDetail({ params }: { params: { id: string } }) {
     );
 
     async function claimAirdrop() {
-        if (!walletClient) return alert("Connect wallet");
+        // Strict enforcement: Only allow claiming if walletClient (Wagmi/Privy) is present
+        if (!walletClient) {
+            alert("Please connect your external wallet (e.g. MetaMask) to claim this airdrop.");
+            return;
+        }
 
         try {
             setIsClaiming(true);

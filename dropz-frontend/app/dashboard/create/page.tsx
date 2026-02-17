@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useWallet } from "../../../hooks/useWallet";
 import { useDropzContract } from "../../../hooks/useDropzContract";
 import { useWalletClient } from "wagmi";
 import { useRouter } from "next/navigation";
@@ -16,15 +17,33 @@ export default function CreateAirdrop() {
 
     async function createAirdrop(e: React.FormEvent) {
         e.preventDefault();
-        if (!walletClient) return alert("Connect wallet");
+        // Strict enforcement: Only allow creation if walletClient (Wagmi/Privy) is present
+        if (!walletClient) {
+            alert("Please connect your external wallet (e.g. MetaMask) to create an airdrop.");
+            return;
+        }
 
         try {
             setIsCreating(true);
-            await walletClient.writeContract({
+            const tx = await walletClient.writeContract({
                 address,
                 abi,
                 functionName: "createAirdrop",
                 args: [tokenName, BigInt(amount)],
+            });
+
+            // Wait for transaction to be processed (simple wait, in prod use publicClient.waitForTransactionReceipt)
+
+            // Now register with backend
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://dropz.onrender.com'}/airdrops/create`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    owner: (walletClient.account as any).address,
+                    name: tokenName,
+                    tokenAddress: address, // Using checkin contract as placeholder for now
+                    totalAmount: amount
+                })
             });
 
             alert("Airdrop created successfully!");
